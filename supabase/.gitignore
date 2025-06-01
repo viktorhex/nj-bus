@@ -1,6 +1,8 @@
 # Supabase
 .branches
 .temp
+scripts/link_supabase_nonprod.sh
+scripts/link_supabase_prod.sh
 
 # dotenvx
 .env.keys

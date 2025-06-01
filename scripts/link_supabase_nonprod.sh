@@ -1,0 +1,1 @@
+bunx supabase link --project-ref vvrgyccmizusykvnhspg
