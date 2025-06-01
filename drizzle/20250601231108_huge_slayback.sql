@@ -1,0 +1,1 @@
+ALTER TABLE "bus_locations" ADD COLUMN "speed" double precision;

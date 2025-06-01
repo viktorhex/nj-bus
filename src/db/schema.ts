@@ -12,10 +12,11 @@ export const bus_locations = pgTable(
     stop_id: varchar("stop_id", { length: 10 }),
     stop_name: text("stop_name"),
     timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
+    speed: doublePrecision("speed"),
     data: jsonb("data").notNull(),
   },
   (table) => ({
-    schema: "public", // Explicitly set schema to public
+    schema: "public",
   })
 );
 

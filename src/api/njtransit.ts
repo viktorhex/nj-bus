@@ -19,11 +19,12 @@ const mockBusData: NJTransitBusData[] = [
   {
     vehicle_id: "1234",
     route: "507",
-    latitude: 39.2776, // Near Ocean City Transportation Center
+    latitude: 39.2776,
     longitude: -74.5746,
     stop_id: "12345",
     stop_name: "Ocean City Transportation Center",
     timestamp: new Date().toISOString(),
+    speed: 30.5,
     extra: "mock data",
   },
   {
@@ -34,30 +35,29 @@ const mockBusData: NJTransitBusData[] = [
     stop_id: "67890",
     stop_name: "Ocean City Transportation Center",
     timestamp: new Date().toISOString(),
+    speed: 28.0,
     extra: "mock data",
   },
 ];
 
 async function fetchBusLocations() {
-  // Use mock data if NJTRANSIT_API_USERNAME is not set
   const useMock = !process.env.NJTRANSIT_API_USERNAME;
   let buses: NJTransitBusData[];
 
   if (useMock) {
     console.log("Using mock NJ Transit API data");
+    if (Math.random() < 0.1) {
+      throw new Error("Mock API failure");
+    }
     buses = mockBusData;
   } else {
     const username = process.env.NJTRANSIT_API_USERNAME!;
     const password = process.env.NJTRANSIT_API_PASSWORD!;
     const url = "https://mybusnow.njtransit.com/bustime/api/v3/getvehicles";
-
     try {
       const response = await axios.get(url, {
         auth: { username, password },
-        params: {
-          rt: "507,509", // Routes serving Ocean City
-          format: "json",
-        },
+        params: { rt: "507,509", format: "json" },
       });
       buses = response.data["bustime-response"].vehicles;
     } catch (error) {
@@ -66,19 +66,24 @@ async function fetchBusLocations() {
     }
   }
 
-  for (const bus of buses) {
-    await db.insert(bus_locations).values({
-      route_number: bus.route,
-      vehicle_id: bus.vehicle_id,
-      latitude: bus.latitude,
-      longitude: bus.longitude,
-      stop_id: bus.stop_id,
-      stop_name: bus.stop_name || "Ocean City Transportation Center",
-      timestamp: new Date(bus.timestamp),
-      data: bus,
-    });
+  try {
+    for (const bus of buses) {
+      await db.insert(bus_locations).values({
+        route_number: bus.route,
+        vehicle_id: bus.vehicle_id,
+        latitude: bus.latitude,
+        longitude: bus.longitude,
+        stop_id: bus.stop_id,
+        stop_name: bus.stop_name || "Ocean City Transportation Center",
+        timestamp: new Date(bus.timestamp),
+        speed: bus.speed,
+        data: bus,
+      });
+    }
+    console.log(`Inserted ${buses.length} bus locations`);
+  } catch (error) {
+    console.error("Error inserting bus data:", error);
   }
-  console.log(`Inserted ${buses.length} bus locations`);
 }
 
 // Run every 30 seconds
